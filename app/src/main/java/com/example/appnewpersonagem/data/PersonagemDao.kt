@@ -9,8 +9,7 @@ import androidx.room.Update
 
 @Dao
 interface PersonagemDao {
-
-    @Insert(onConflict = OnConflictStrategy.REPLACE)
+    @Insert(onConflict = OnConflictStrategy.IGNORE)
     suspend fun inserirPersonagem(personagem: PersonagemEntity)
 
     @Update
@@ -22,4 +21,6 @@ interface PersonagemDao {
     @Query("SELECT * FROM personagens")
     suspend fun obterTodosPersonagens(): List<PersonagemEntity>
 
+    @Query("SELECT * FROM personagens WHERE id = :id")
+    suspend fun obterPersonagemPorId(id: Int): PersonagemEntity?
 }

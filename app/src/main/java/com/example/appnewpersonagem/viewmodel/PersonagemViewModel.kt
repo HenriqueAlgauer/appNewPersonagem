@@ -14,13 +14,21 @@ import personagem.Personagem
 
 class PersonagemViewModel(application: Application) : AndroidViewModel(application) {
     private val personagemDao: PersonagemDao = AppDatabase.getDatabase(application).personagemDao()
-
     private val _personagens = MutableLiveData<List<PersonagemEntity>>()
-
     val personagens: LiveData<List<PersonagemEntity>> = _personagens
 
     init {
         obterTodosPersonagens()
+    }
+
+    private val _personagemSelecionado = MutableLiveData<PersonagemEntity?>()
+    val personagemSelecionado: LiveData<PersonagemEntity?> = _personagemSelecionado
+
+    fun obterPersonagemPorId(id: Int) {
+        viewModelScope.launch {
+            val personagem = personagemDao.obterPersonagemPorId(id)
+            _personagemSelecionado.postValue(personagem)
+        }
     }
 
     fun inserirPersonagem(personagem: Personagem) {
@@ -44,9 +52,17 @@ class PersonagemViewModel(application: Application) : AndroidViewModel(applicati
         }
     }
 
+    fun editarPersonagem(personagem: PersonagemEntity) {
+        viewModelScope.launch {
+            personagemDao.atualizarPersonagem(personagem)
+            obterTodosPersonagens() // Atualiza a lista após a edição
+        }
+    }
+
     fun deletarPersonagem(personagem: PersonagemEntity) {
         viewModelScope.launch {
             personagemDao.deletarPersonagem(personagem)
+            obterTodosPersonagens()
         }
     }
 
