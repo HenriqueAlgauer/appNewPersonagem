@@ -46,12 +46,6 @@ class PersonagemViewModel(application: Application) : AndroidViewModel(applicati
     }
 
 
-    fun atualizarPersonagem(personagem: PersonagemEntity) {
-        viewModelScope.launch {
-            personagemDao.atualizarPersonagem(personagem)
-        }
-    }
-
     fun editarPersonagem(personagem: PersonagemEntity) {
         viewModelScope.launch {
             personagemDao.atualizarPersonagem(personagem)

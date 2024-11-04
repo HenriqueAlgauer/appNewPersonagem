@@ -7,6 +7,7 @@ import android.widget.Toast
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
+import androidx.activity.viewModels
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Spacer
@@ -33,67 +34,78 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.unit.dp
+import com.example.appnewpersonagem.data.Mapper.toPersonagem
+import com.example.appnewpersonagem.data.PersonagemEntity
 import com.example.appnewpersonagem.viewmodel.PersonagemViewModel
 import criarPersonagem
 import listaDeRacas
+import personagem.Personagem
 
 class SecondActivity : ComponentActivity() {
+    private val viewModel: PersonagemViewModel by viewModels()
+
     override fun onCreate(savedInstanceState: Bundle?) {
+
         super.onCreate(savedInstanceState)
         enableEdgeToEdge()
         setContent {
-            CriarPersonagemScreen()
+            CriarPersonagemScreen(
+                viewModel = viewModel,
+                onSave = { finish() }
+            )
         }
     }
 }
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun CriarPersonagemScreen() {
+fun CriarPersonagemScreen(
+    viewModel: PersonagemViewModel,
+    personagemExistente: PersonagemEntity? = null,
+    onSave: () -> Unit
+) {
     val context = LocalContext.current
 
-    
-    var nome by remember { mutableStateOf("") }
-    val racasDisponiveis = listaDeRacas 
-    var racaSelecionada by remember { mutableStateOf("") }
+    // Estados para os atributos do personagem, utilizando valores do personagemExistente, se presente
+    val nome = remember { mutableStateOf(personagemExistente?.nome ?: "") }
+    var racaSelecionada by remember { mutableStateOf(personagemExistente?.raca ?: "") }
+    val valoresAtributos = remember {
+        mutableStateMapOf(
+            "forca" to (personagemExistente?.forca?.toString() ?: "8"),
+            "destreza" to (personagemExistente?.destreza?.toString() ?: "8"),
+            "constituicao" to (personagemExistente?.constituicao?.toString() ?: "8"),
+            "inteligencia" to (personagemExistente?.inteligencia?.toString() ?: "8"),
+            "sabedoria" to (personagemExistente?.sabedoria?.toString() ?: "8"),
+            "carisma" to (personagemExistente?.carisma?.toString() ?: "8")
+        )
+    }
+
+    val racasDisponiveis = listaDeRacas
     var expandedRaca by remember { mutableStateOf(false) }
 
     val atributos = listOf(
         "forca", "destreza", "constituicao",
         "inteligencia", "sabedoria", "carisma"
     )
-    val valoresAtributos = remember { mutableStateMapOf<String, String>() }
+
     val expandedAtributos = remember { mutableStateMapOf<String, Boolean>() }
     atributos.forEach { atributo ->
-        valoresAtributos.getOrPut(atributo) { "8" }
         expandedAtributos.getOrPut(atributo) { false }
     }
 
-    
     var pontosRestantes by remember { mutableStateOf(27) }
-    val custoPorNivel = mapOf(
-        8 to 0,
-        9 to 1,
-        10 to 2,
-        11 to 3,
-        12 to 4,
-        13 to 5,
-        14 to 7,
-        15 to 9
-    )
-
+    val custoPorNivel = mapOf(8 to 0, 9 to 1, 10 to 2, 11 to 3, 12 to 4, 13 to 5, 14 to 7, 15 to 9)
     val valoresPossiveisAtributos = (8..15).map { it.toString() }
 
+    // Função para calcular os pontos restantes
     fun calcularPontosRestantes() {
         val totalGasto = atributos.sumOf { atributo ->
             val valor = valoresAtributos[atributo]?.toIntOrNull() ?: 8
-            val custo = custoPorNivel[valor] ?: 0
-            custo
+            custoPorNivel[valor] ?: 0
         }
         pontosRestantes = 27 - totalGasto
     }
 
-    
     var showDialog by remember { mutableStateOf(false) }
     var detalhesPersonagem by remember { mutableStateOf("") }
 
@@ -104,17 +116,16 @@ fun CriarPersonagemScreen() {
         verticalArrangement = Arrangement.SpaceBetween
     ) {
         Column {
-            
+
             OutlinedTextField(
-                value = nome,
-                onValueChange = { nome = it },
+                value = nome.value,
+                onValueChange = { nome.value = it },
                 label = { Text("Nome do Personagem") },
                 modifier = Modifier
                     .fillMaxWidth()
                     .padding(bottom = 8.dp)
             )
 
-            
             ExposedDropdownMenuBox(
                 expanded = expandedRaca,
                 onExpandedChange = { expandedRaca = !expandedRaca }
@@ -149,13 +160,11 @@ fun CriarPersonagemScreen() {
 
             Spacer(modifier = Modifier.height(16.dp))
 
-            
             Text(
                 text = "Pontos restantes: $pontosRestantes",
                 style = MaterialTheme.typography.bodyLarge
             )
 
-            
             atributos.forEach { atributo ->
                 val expandedAtributo = expandedAtributos[atributo] ?: false
 
@@ -188,17 +197,13 @@ fun CriarPersonagemScreen() {
                             DropdownMenuItem(
                                 text = { Text(text = valor) },
                                 onClick = {
-                                    
                                     val intValue = valor.toInt()
                                     val custoAtual = custoPorNivel[intValue] ?: 0
                                     val totalGastoSemEste = atributos.sumOf { attr ->
                                         if (attr != atributo) {
                                             val valorAttr = valoresAtributos[attr]?.toIntOrNull() ?: 8
-                                            val custo = custoPorNivel[valorAttr] ?: 0
-                                            custo
-                                        } else {
-                                            0
-                                        }
+                                            custoPorNivel[valorAttr] ?: 0
+                                        } else 0
                                     }
                                     val pontosRestantesPossiveis = 27 - totalGastoSemEste - custoAtual
                                     if (pontosRestantesPossiveis >= 0) {
@@ -206,7 +211,6 @@ fun CriarPersonagemScreen() {
                                         calcularPontosRestantes()
                                         expandedAtributos[atributo] = false
                                     } else {
-                                        
                                         Toast.makeText(context, "Pontos insuficientes", Toast.LENGTH_SHORT).show()
                                     }
                                 }
@@ -217,46 +221,41 @@ fun CriarPersonagemScreen() {
             }
         }
 
-        
         Button(
             onClick = {
-                if (nome.isNotBlank() && racaSelecionada.isNotBlank() && valoresAtributos.values.all { it.isNotBlank() }) {
-                    
-                    val atributosInt = valoresAtributos.mapValues { it.value.toInt() }
+                if (nome.value.isNotBlank() && racaSelecionada.isNotBlank()) {
+                    val personagemEntity = PersonagemEntity(
+                        id = personagemExistente?.id ?: 0,
+                        nome = nome.value,
+                        raca = racaSelecionada,
+                        forca = valoresAtributos["forca"]?.toInt() ?: 8,
+                        destreza = valoresAtributos["destreza"]?.toInt() ?: 8,
+                        constituicao = valoresAtributos["constituicao"]?.toInt() ?: 8,
+                        inteligencia = valoresAtributos["inteligencia"]?.toInt() ?: 8,
+                        sabedoria = valoresAtributos["sabedoria"]?.toInt() ?: 8,
+                        carisma = valoresAtributos["carisma"]?.toInt() ?: 8
+                    )
 
-                    
-                    val personagem = criarPersonagem(nome, racaSelecionada, atributosInt)
-
-
-
-                    if (personagem != null) {
-                        val application = context.applicationContext as Application
-
-                        val viewModel = PersonagemViewModel(application)
-
-                        viewModel.inserirPersonagem(personagem)
-
-                        detalhesPersonagem = personagem.getDetalhes()
-                        
-                        showDialog = true
+                    // Salvar ou atualizar
+                    if (personagemExistente == null) {
+                        viewModel.inserirPersonagem(personagemEntity.toPersonagem(racaSelecionada))
                     } else {
-                        
-                        Toast.makeText(context, "Erro ao criar personagem.", Toast.LENGTH_SHORT).show()
+                        viewModel.editarPersonagem(personagemEntity)
                     }
+
+                    onSave() // Retornar após salvar
                 } else {
-                    
-                    Toast.makeText(context, "Preencha todos os campos corretamente.", Toast.LENGTH_SHORT).show()
+                    Toast.makeText(context, "Preencha todos os campos", Toast.LENGTH_SHORT).show()
                 }
             },
             modifier = Modifier
                 .fillMaxWidth()
                 .height(56.dp),
-            enabled = pontosRestantes >= 0 
+            enabled = pontosRestantes >= 0
         ) {
-            Text(text = "Concluir")
+            Text(if (personagemExistente == null) "Concluir" else "Salvar")
         }
 
-        
         if (showDialog) {
             AlertDialog(
                 onDismissRequest = { showDialog = false },
@@ -264,7 +263,6 @@ fun CriarPersonagemScreen() {
                 text = { Text(detalhesPersonagem) },
                 confirmButton = {
                     TextButton(onClick = {
-                        
                         (context as? Activity)?.finish()
                     }) {
                         Text("OK")

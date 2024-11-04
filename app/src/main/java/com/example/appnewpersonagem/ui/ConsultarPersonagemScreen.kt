@@ -39,7 +39,11 @@ fun ConsultarPersonagemScreen(viewModel: PersonagemViewModel) {
                 PersonagemItem(
                     personagem = personagem,
                     onDeleteClick = { viewModel.deletarPersonagem(personagem) },
-                    onEditClick = { viewModel.atualizarPersonagem(personagem) }
+                    onEditClick = {
+
+
+
+                    }
                 )
             }
         }
