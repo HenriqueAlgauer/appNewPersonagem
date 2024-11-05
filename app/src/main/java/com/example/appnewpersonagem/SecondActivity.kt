@@ -60,7 +60,7 @@ fun CriarPersonagemScreen(
 ) {
     val context = LocalContext.current
 
-    // Check if we are editing or creating a character
+    // Verifica se estamos em modo de edição ou criação
     val isEditMode = personagemExistente != null
     val nome = remember { mutableStateOf(personagemExistente?.nome ?: "") }
     var racaSelecionada by remember { mutableStateOf(personagemExistente?.raca ?: "") }
@@ -81,12 +81,18 @@ fun CriarPersonagemScreen(
     val custoPorNivel = mapOf(8 to 0, 9 to 1, 10 to 2, 11 to 3, 12 to 4, 13 to 5, 14 to 7, 15 to 9)
     val valoresPossiveisAtributos = (8..15).map { it.toString() }
 
+    // Calcula pontos restantes ao iniciar a tela com valores predefinidos do personagemExistente
     fun calcularPontosRestantes() {
         val totalGasto = valoresAtributos.values.sumOf { valor ->
             val valorInt = valor.toIntOrNull() ?: 8
             custoPorNivel[valorInt] ?: 0
         }
         pontosRestantes = 27 - totalGasto
+    }
+
+    // Chama o cálculo inicial de pontos para garantir exibição correta
+    LaunchedEffect(Unit) {
+        calcularPontosRestantes()
     }
 
     var showDialog by remember { mutableStateOf(false) }
