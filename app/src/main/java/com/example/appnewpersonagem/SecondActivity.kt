@@ -7,29 +7,10 @@ import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
 import androidx.activity.viewModels
-import androidx.compose.foundation.layout.Arrangement
-import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.Spacer
-import androidx.compose.foundation.layout.fillMaxSize
-import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.height
-import androidx.compose.foundation.layout.padding
-import androidx.compose.material3.AlertDialog
-import androidx.compose.material3.Button
-import androidx.compose.material3.DropdownMenuItem
-import androidx.compose.material3.ExperimentalMaterial3Api
-import androidx.compose.material3.ExposedDropdownMenuBox
-import androidx.compose.material3.ExposedDropdownMenuDefaults
-import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.OutlinedTextField
-import androidx.compose.material3.Text
-import androidx.compose.material3.TextButton
-import androidx.compose.runtime.Composable
-import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableStateMapOf
-import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.remember
-import androidx.compose.runtime.setValue
+import androidx.compose.foundation.layout.*
+import androidx.compose.material3.*
+import androidx.compose.runtime.*
+import androidx.compose.runtime.livedata.observeAsState
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.unit.dp
@@ -52,12 +33,19 @@ class SecondActivity : ComponentActivity() {
         }
 
         setContent {
-            val personagemExistente = viewModel.personagemSelecionado.value
-            CriarPersonagemScreen(
-                viewModel = viewModel,
-                personagemExistente = personagemExistente,
-                onSave = { finish() }
-            )
+            val personagemExistente by viewModel.personagemSelecionado.observeAsState()
+
+            if (personagemId != -1 && personagemExistente == null) {
+                // Exibe uma mensagem de erro se o ID do personagem foi passado, mas o personagem não foi encontrado
+                Toast.makeText(this, "Personagem não encontrado.", Toast.LENGTH_SHORT).show()
+                finish() // Fecha a Activity para evitar erros futuros
+            } else {
+                CriarPersonagemScreen(
+                    viewModel = viewModel,
+                    personagemExistente = personagemExistente,
+                    onSave = { finish() }
+                )
+            }
         }
     }
 }
@@ -71,6 +59,8 @@ fun CriarPersonagemScreen(
 ) {
     val context = LocalContext.current
 
+    // Verifica se estamos em modo de edição ou criação
+    val isEditMode = personagemExistente != null
     val nome = remember { mutableStateOf(personagemExistente?.nome ?: "") }
     var racaSelecionada by remember { mutableStateOf(personagemExistente?.raca ?: "") }
     val valoresAtributos = remember {
@@ -228,10 +218,10 @@ fun CriarPersonagemScreen(
                         carisma = valoresAtributos["carisma"]?.toInt() ?: 8
                     )
 
-                    if (personagemExistente == null) {
-                        viewModel.inserirPersonagem(personagemEntity.toPersonagem(racaSelecionada))
-                    } else {
+                    if (isEditMode) {
                         viewModel.editarPersonagem(personagemEntity)
+                    } else {
+                        viewModel.inserirPersonagem(personagemEntity.toPersonagem(racaSelecionada))
                     }
 
                     onSave()
@@ -244,22 +234,7 @@ fun CriarPersonagemScreen(
                 .height(56.dp),
             enabled = pontosRestantes >= 0
         ) {
-            Text(if (personagemExistente == null) "Concluir" else "Salvar")
-        }
-
-        if (showDialog) {
-            AlertDialog(
-                onDismissRequest = { showDialog = false },
-                title = { Text("Personagem Criado") },
-                text = { Text(detalhesPersonagem) },
-                confirmButton = {
-                    TextButton(onClick = {
-                        (context as? Activity)?.finish()
-                    }) {
-                        Text("OK")
-                    }
-                }
-            )
+            Text(if (isEditMode) "Salvar" else "Concluir")
         }
     }
 }

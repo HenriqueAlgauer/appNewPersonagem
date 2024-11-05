@@ -35,6 +35,7 @@ class PersonagemViewModel(application: Application) : AndroidViewModel(applicati
         viewModelScope.launch {
             val personagemEntity = personagem.toEntity()
             personagemDao.inserirPersonagem(personagemEntity)
+            obterTodosPersonagens() // Atualiza a lista após inserir
         }
     }
 
@@ -45,11 +46,11 @@ class PersonagemViewModel(application: Application) : AndroidViewModel(applicati
         }
     }
 
-
     fun editarPersonagem(personagem: PersonagemEntity) {
         viewModelScope.launch {
             personagemDao.editarPersonagem(personagem)
-            obterTodosPersonagens()
+            obterTodosPersonagens() // Atualiza a lista após editar
+            limparPersonagemSelecionado() // Limpa o personagem selecionado após a edição
         }
     }
 
@@ -60,4 +61,8 @@ class PersonagemViewModel(application: Application) : AndroidViewModel(applicati
         }
     }
 
+    // Função para limpar o personagem selecionado após uso
+    private fun limparPersonagemSelecionado() {
+        _personagemSelecionado.postValue(null)
+    }
 }
