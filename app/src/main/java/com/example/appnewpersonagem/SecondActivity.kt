@@ -26,19 +26,20 @@ class SecondActivity : ComponentActivity() {
         super.onCreate(savedInstanceState)
         enableEdgeToEdge()
 
-        // Verifica se há um personagem existente para edição
+        // Check if this is for editing or creating a new character
         val personagemId = intent.getIntExtra("personagemId", -1)
         if (personagemId != -1) {
             viewModel.obterPersonagemPorId(personagemId)
         }
 
         setContent {
+            // Observe personagemSelecionado to load it when available for editing
             val personagemExistente by viewModel.personagemSelecionado.observeAsState()
 
+            // If personagemId was provided but no personagem was found, show error
             if (personagemId != -1 && personagemExistente == null) {
-                // Exibe uma mensagem de erro se o ID do personagem foi passado, mas o personagem não foi encontrado
                 Toast.makeText(this, "Personagem não encontrado.", Toast.LENGTH_SHORT).show()
-                finish() // Fecha a Activity para evitar erros futuros
+                finish() // Close activity if no character found
             } else {
                 CriarPersonagemScreen(
                     viewModel = viewModel,
@@ -59,7 +60,7 @@ fun CriarPersonagemScreen(
 ) {
     val context = LocalContext.current
 
-    // Verifica se estamos em modo de edição ou criação
+    // Check if we are editing or creating a character
     val isEditMode = personagemExistente != null
     val nome = remember { mutableStateOf(personagemExistente?.nome ?: "") }
     var racaSelecionada by remember { mutableStateOf(personagemExistente?.raca ?: "") }

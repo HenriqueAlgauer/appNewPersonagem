@@ -17,4 +17,9 @@ class ConsultarPersonagemActivity : ComponentActivity() {
             ConsultarPersonagemScreen(viewModel)
         }
     }
+
+    override fun onResume() {
+        super.onResume()
+        viewModel.obterTodosPersonagens()
+    }
 }
