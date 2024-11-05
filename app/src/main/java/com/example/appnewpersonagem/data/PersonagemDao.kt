@@ -13,7 +13,7 @@ interface PersonagemDao {
     suspend fun inserirPersonagem(personagem: PersonagemEntity)
 
     @Update
-    suspend fun atualizarPersonagem(personagem: PersonagemEntity)
+    suspend fun editarPersonagem(personagem: PersonagemEntity)
 
     @Delete
     suspend fun deletarPersonagem(personagem: PersonagemEntity)

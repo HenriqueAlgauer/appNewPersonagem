@@ -41,15 +41,15 @@ class PersonagemViewModel(application: Application) : AndroidViewModel(applicati
     fun obterTodosPersonagens() {
         viewModelScope.launch {
             val personagensEntity = personagemDao.obterTodosPersonagens()
-            _personagens.postValue(personagensEntity) // Atualiza o LiveData
+            _personagens.postValue(personagensEntity)
         }
     }
 
 
     fun editarPersonagem(personagem: PersonagemEntity) {
         viewModelScope.launch {
-            personagemDao.atualizarPersonagem(personagem)
-            obterTodosPersonagens() // Atualiza a lista após a edição
+            personagemDao.editarPersonagem(personagem)
+            obterTodosPersonagens()
         }
     }
 
