@@ -4,11 +4,11 @@ import android.content.Intent
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
+import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Button
 import androidx.compose.material3.Text
-import androidx.compose.runtime.Composable
-import androidx.compose.runtime.LaunchedEffect
-import androidx.compose.runtime.getValue
+import androidx.compose.material3.TextButton
+import androidx.compose.runtime.*
 import androidx.compose.runtime.livedata.observeAsState
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
@@ -49,6 +49,10 @@ fun ConsultarPersonagemScreen(viewModel: PersonagemViewModel) {
                             putExtra("personagemId", personagem.id)
                         }
                         context.startActivity(intent)
+                    },
+                    onConsultClick = {
+                        // Exibir o diálogo de consulta com os detalhes do personagem
+                        viewModel.obterPersonagemPorId(personagem.id)
                     }
                 )
             }
@@ -60,8 +64,11 @@ fun ConsultarPersonagemScreen(viewModel: PersonagemViewModel) {
 fun PersonagemItem(
     personagem: PersonagemEntity,
     onDeleteClick: () -> Unit,
-    onEditClick: () -> Unit
+    onEditClick: () -> Unit,
+    onConsultClick: () -> Unit
 ) {
+    var showDialog by remember { mutableStateOf(false) }
+
     Column(
         modifier = Modifier
             .fillMaxWidth()
@@ -72,16 +79,6 @@ fun PersonagemItem(
         Text(text = "Nível: ${personagem.nivel}")
         Text(text = "Vida: ${personagem.vida}")
 
-        // Exibe atributos e modificadores
-        Text(text = "Atributos:")
-        Text(text = "Força: ${personagem.forca} (Mod: ${calcularModificador(personagem.forca)})")
-        Text(text = "Destreza: ${personagem.destreza} (Mod: ${calcularModificador(personagem.destreza)})")
-        Text(text = "Constituição: ${personagem.constituicao} (Mod: ${calcularModificador(personagem.constituicao)})")
-        Text(text = "Inteligência: ${personagem.inteligencia} (Mod: ${calcularModificador(personagem.inteligencia)})")
-        Text(text = "Sabedoria: ${personagem.sabedoria} (Mod: ${calcularModificador(personagem.sabedoria)})")
-        Text(text = "Carisma: ${personagem.carisma} (Mod: ${calcularModificador(personagem.carisma)})")
-
-        // Botões para editar ou excluir
         Row(
             modifier = Modifier.fillMaxWidth(),
             horizontalArrangement = Arrangement.SpaceBetween
@@ -92,6 +89,35 @@ fun PersonagemItem(
             Button(onClick = onDeleteClick) {
                 Text("Excluir")
             }
+            Button(onClick = { showDialog = true }) {
+                Text("Consultar")
+            }
+        }
+
+        if (showDialog) {
+            AlertDialog(
+                onDismissRequest = { showDialog = false },
+                title = { Text("Detalhes do Personagem") },
+                text = {
+                    Column {
+                        Text("Nome: ${personagem.nome}")
+                        Text("Raça: ${personagem.raca}")
+                        Text("Nível: ${personagem.nivel}")
+                        Text("Vida: ${personagem.vida}")
+                        Text("Força: ${personagem.forca} (Mod: ${calcularModificador(personagem.forca)})")
+                        Text("Destreza: ${personagem.destreza} (Mod: ${calcularModificador(personagem.destreza)})")
+                        Text("Constituição: ${personagem.constituicao} (Mod: ${calcularModificador(personagem.constituicao)})")
+                        Text("Inteligência: ${personagem.inteligencia} (Mod: ${calcularModificador(personagem.inteligencia)})")
+                        Text("Sabedoria: ${personagem.sabedoria} (Mod: ${calcularModificador(personagem.sabedoria)})")
+                        Text("Carisma: ${personagem.carisma} (Mod: ${calcularModificador(personagem.carisma)})")
+                    }
+                },
+                confirmButton = {
+                    TextButton(onClick = { showDialog = false }) {
+                        Text("Fechar")
+                    }
+                }
+            )
         }
     }
 }
